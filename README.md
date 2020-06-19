@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 
 
 
-# Codebook for Samsung data
+# README file for Samsung data
 ##  Coursera "Getting and cleaning data" programming assignment
 
 This file guides the reader through the scripts used to tidy the input data for the "Getting and cleaning data" programming assignment.  
