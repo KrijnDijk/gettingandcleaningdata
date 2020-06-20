@@ -19,9 +19,12 @@ This file guides the reader through the scripts used to tidy the input data for 
   
 This assumes that the source data (https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip) have been downloaded and extracted in the working directory. This should result in a folder named "UCI HAR Dataset" placed in the working directory.  
   
-First, measurement data of the test and training set are read into R, as well as the data files that indicate subject and activity indices.  
+First, relevant libraries are loaded. Then, measurement data of the test and training set are read into R, as well as the data files that indicate subject and activity indices.  
 
 ```{r}
+library(plyr)
+library(data.table)
+
 ## Read in training set, labels and subjects
 xtrain <- read.table("UCI HAR Dataset/train/X_train.txt")
 labels_train <- read.table("UCI HAR Dataset/train/y_train.txt")
@@ -50,7 +53,7 @@ features <- read.table("UCI HAR Dataset/features.txt")
   We then use grepl to create a logical vector that is TRUE when a feature contains the text "mean" or "SD":
 ```{r}
 ## Identify features with mean or std
-meanstd <- grepl("mean|std", features[,2])
+meanstd <- grepl("mean\\(\\)|std\\(\\)", features[,2])
 ```  
   
   The data frame is then subsetted to only retain columns corresponding to these features.
@@ -72,7 +75,7 @@ all_labels <- rbind(labels_train, labels_test)
 ```{r}
 # Replace activity numbers with descriptive activity names
 activities <- read.table("UCI HAR Dataset/activity_labels.txt")
-activities <- merge(all_labels, activities, sort = FALSE)
+activities <- join(all_labels, activities)
 filtereddata <- cbind(activities[,2], filtereddata)
 
 ## Add subject ID to data frame
@@ -83,7 +86,7 @@ filtereddata <- cbind(all_subjects, filtereddata)
 
 ```{r}
 ## Label variables
-selectedvars <- (grep("mean|std", features[,2], value = T))
+selectedvars <- (grep("mean\\(\\)|std\\(\\)", features[,2], value = T))
 colnames(filtereddata) = c("subject", "activity", selectedvars)
 write.table(filtereddata, file = "alldata.txt", row.names = FALSE)
 ```
@@ -93,7 +96,6 @@ write.table(filtereddata, file = "alldata.txt", row.names = FALSE)
   
 ```{r}
   ## Create new tidy dataset with average of each variable for each subject/activity pair
-library(data.table)
 dt <- data.table(filtereddata)
 dt2 <- dt[order(subject, activity), lapply(.SD, mean), by = .(subject, activity)]
 write.table(dt2, file = "tidydata.txt", row.names = FALSE)
